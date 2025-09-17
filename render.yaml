@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: telegram-cases-admin
+    runtime: node
+    region: frankfurt  # или другой регион по желанию
+    plan: starter
+    env: node
+    rootDir: ./admin
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_API_URL
+        value: https://telegram-cases-be.onrender.com/api
+      - key: VITE_PARTNERS_API_URL
+        value: https://portals-market.com
+      - key: VITE_PARTNERS_TOKEN
+        value: 73efdc22-c48b-4aba-b3ee-3688e42a596a
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
