@@ -18,6 +18,7 @@ import {
 } from "../../services/adminApi";
 import { useToast } from "../../components/Toast";
 import { Modal } from "../../components/ui/Modal";
+import { OptimizedImage } from "../../components/ui/OptimizedImage";
 export function CasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("");
@@ -47,13 +48,11 @@ export function CasesPage() {
     const isSelected = selectedNftsForCase.some(item => item.nftId === nft.id);
     
     if (isSelected) {
-      // Убрать NFT из выбранных
       setSelectedNftsForCase(prev => prev.filter(item => item.nftId !== nft.id));
     } else {
-      // Добавить NFT в выбранные
       setSelectedNftsForCase(prev => [...prev, {
         nftId: nft.id,
-        dropChance: 10, // Начальный шанс
+        dropChance: 10,
         rarity: 'COMMON' as const
       }]);
     }
@@ -588,7 +587,7 @@ export function CasesPage() {
           selectedNfts={selectedNftsForCase}
           onSubmit={(data) => {
             createCaseMutation.mutate(data);
-            setSelectedNftsForCase([]); // Очистить выбранные NFT после создания
+            setSelectedNftsForCase([]);
           }}
           isLoading={createCaseMutation.isPending}
         />
@@ -639,7 +638,6 @@ function CreateCaseModalContent({
 }) {
   const { showToast } = useToast();
   
-  // Функция для получения полного URL изображения
   const getImageSrc = (imageUrl: string | undefined) => {
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
@@ -696,11 +694,9 @@ function CreateCaseModalContent({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Показать превью
       setCaseImageUrl(URL.createObjectURL(file));
       
       try {
-        // Загрузить файл на backend
         const formData = new FormData();
         formData.append('image', file);
         formData.append('type', 'case');
@@ -712,9 +708,6 @@ function CreateCaseModalContent({
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Upload response:', data); // Для отладки
-          
-          // Сохраняем URL как есть - он уже обрабатывается в getImageSrc при отображении
           setCaseImageUrl(data.imageUrl);
           showToast("Изображение загружено", "success");
         } else {
@@ -723,13 +716,12 @@ function CreateCaseModalContent({
       } catch (error) {
         console.error('Ошибка загрузки изображения:', error);
         showToast("Ошибка загрузки изображения. Попробуйте меньший файл", "error");
-        setCaseImageUrl(""); // Очистить превью при ошибке
+        setCaseImageUrl("");
       }
     }
   };
   const [localSelectedNfts, setLocalSelectedNfts] = useState(selectedNfts);
 
-  // Синхронизируем локальное состояние с пропсами при изменении
   useEffect(() => {
     setLocalSelectedNfts(selectedNfts);
   }, [selectedNfts]);
@@ -982,7 +974,6 @@ function EditCaseModalContent({
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }) {
-  // Функция для получения полного URL изображения
   const getImageSrc = (imageUrl: string | undefined) => {
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
@@ -1024,9 +1015,6 @@ function EditCaseModalContent({
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Upload response:', data); // Для отладки
-          
-          // Сохраняем URL как есть - он уже обрабатывается в getImageSrc при отображении
           setCaseImageUrl(data.imageUrl);
           showToast("Изображение загружено", "success");
         } else {
