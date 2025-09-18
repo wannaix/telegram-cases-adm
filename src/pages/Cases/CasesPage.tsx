@@ -704,9 +704,8 @@ function CreateCaseModalContent({
           const data = await response.json();
           console.log('Upload response:', data); // Для отладки
           
-          // Используем getImageSrc чтобы получить полный URL
-          const fullImageUrl = getImageSrc(data.imageUrl);
-          setCaseImageUrl(fullImageUrl);
+          // Сохраняем URL как есть - он уже обрабатывается в getImageSrc при отображении
+          setCaseImageUrl(data.imageUrl);
           showToast("Изображение загружено", "success");
         } else {
           throw new Error('Ошибка загрузки');
@@ -973,14 +972,6 @@ function EditCaseModalContent({
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }) {
-  // Дублируем функцию getImageSrc
-  const getImageSrc = (imageUrl: string | undefined) => {
-    if (!imageUrl) return "";
-    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
-    const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
-    return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
-  };
   const [caseName, setCaseName] = useState(caseData.name);
   const [caseDescription, setCaseDescription] = useState(
     caseData.description || ""
@@ -1016,9 +1007,8 @@ function EditCaseModalContent({
           const data = await response.json();
           console.log('Upload response:', data); // Для отладки
           
-          // Используем getImageSrc чтобы получить полный URL
-          const fullImageUrl = getImageSrc(data.imageUrl);
-          setCaseImageUrl(fullImageUrl);
+          // Сохраняем URL как есть - он уже обрабатывается в getImageSrc при отображении
+          setCaseImageUrl(data.imageUrl);
           showToast("Изображение загружено", "success");
         } else {
           throw new Error('Ошибка загрузки');
