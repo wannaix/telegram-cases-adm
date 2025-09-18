@@ -702,7 +702,11 @@ function CreateCaseModalContent({
 
         if (response.ok) {
           const data = await response.json();
-          setCaseImageUrl(data.imageUrl); // URL от backend
+          console.log('Upload response:', data); // Для отладки
+          
+          // Используем getImageSrc чтобы получить полный URL
+          const fullImageUrl = getImageSrc(data.imageUrl);
+          setCaseImageUrl(fullImageUrl);
           showToast("Изображение загружено", "success");
         } else {
           throw new Error('Ошибка загрузки');
@@ -1002,7 +1006,11 @@ function EditCaseModalContent({
 
         if (response.ok) {
           const data = await response.json();
-          setCaseImageUrl(data.imageUrl);
+          console.log('Upload response:', data); // Для отладки
+          
+          // Используем getImageSrc чтобы получить полный URL
+          const fullImageUrl = getImageSrc(data.imageUrl);
+          setCaseImageUrl(fullImageUrl);
           showToast("Изображение загружено", "success");
         } else {
           throw new Error('Ошибка загрузки');
