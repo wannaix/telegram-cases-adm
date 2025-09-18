@@ -787,16 +787,32 @@ function CreateCaseModalContent({
             Изображение кейса
           </label>
           <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e)}
-                className="hidden"
-                id="case-image-upload"
-              />
-              <label
-                htmlFor="case-image-upload"
+            {caseImageUrl ? (
+              <div className="relative">
+                <img
+                  src={caseImageUrl}
+                  alt="Превью кейса"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCaseImageUrl("")}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e)}
+                  className="hidden"
+                  id="case-image-upload"
+                />
+                <label
+                  htmlFor="case-image-upload"
                 className="cursor-pointer inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
               >
                 <svg
@@ -814,7 +830,8 @@ function CreateCaseModalContent({
                 </svg>
                 Выбрать изображение
               </label>
-            </div>
+              </div>
+            )}
           </div>
         </div>
         {localSelectedNfts.length > 0 && (
@@ -957,7 +974,7 @@ function EditCaseModalContent({
     caseData.description || ""
   );
   const [casePrice, setCasePrice] = useState(caseData.price.toString());
-  const [caseImageUrl] = useState(caseData.imageUrl || "");
+  const [caseImageUrl, setCaseImageUrl] = useState(caseData.imageUrl || "");
   const [isActive, setIsActive] = useState(caseData.isActive);
   const [isLocked, setIsLocked] = useState(caseData.isLocked);
   const [unlockLevel, setUnlockLevel] = useState(
@@ -966,6 +983,38 @@ function EditCaseModalContent({
   const [unlockPrice, setUnlockPrice] = useState(
     caseData.unlockPrice?.toString() || ""
   );
+  const { showToast } = useToast();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCaseImageUrl(URL.createObjectURL(file));
+      
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('type', 'case');
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/public-admin/upload-image`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCaseImageUrl(data.imageUrl);
+          showToast("Изображение загружено", "success");
+        } else {
+          throw new Error('Ошибка загрузки');
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки изображения:', error);
+        showToast("Ошибка загрузки изображения", "error");
+        setCaseImageUrl("");
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const updateData = {
@@ -1023,28 +1072,59 @@ function EditCaseModalContent({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            URL изображения (читать только)
+            Изображение кейса
           </label>
-          <textarea
-            value={caseImageUrl}
-            readOnly
-            rows={2}
-            placeholder="URL локального изображения..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono"
-          />
-          {caseImageUrl && (
-            <div className="mt-2">
-              <img
-                src={caseImageUrl}
-                alt="Превью"
-                className="w-32 h-32 object-cover rounded-lg"
-                onError={(e) => {
+          <div className="flex items-start gap-4">
+            {caseImageUrl ? (
+              <div className="relative">
+                <img
+                  src={caseImageUrl}
+                  alt="Превью кейса"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                  onError={(e) => {
                   e.currentTarget.src =
                     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"%3E%3Crect width="128" height="128" fill="%23e5e7eb"%2F%3E%3Ctext x="64" y="64" text-anchor="middle" dy=".3em" fill="%236b7280" font-family="sans-serif" font-size="14"%3EОшибка загрузки%3C%2Ftext%3E%3C%2Fsvg%3E';
                 }}
               />
+              <button
+                type="button"
+                onClick={() => setCaseImageUrl("")}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                id="edit-case-image-upload"
+              />
+              <label
+                htmlFor="edit-case-image-upload"
+                className="cursor-pointer inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Выбрать изображение
+              </label>
             </div>
           )}
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
