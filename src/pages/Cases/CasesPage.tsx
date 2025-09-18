@@ -18,7 +18,6 @@ import {
 } from "../../services/adminApi";
 import { useToast } from "../../components/Toast";
 import { Modal } from "../../components/ui/Modal";
-import { OptimizedImage } from "../../components/ui/OptimizedImage";
 export function CasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("");
