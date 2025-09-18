@@ -3,7 +3,6 @@ export interface CreateCaseWithNftsRequest {
   description?: string;
   price: number;
   imageUrl?: string;
-  imageBase64?: string;
   isActive?: boolean;
   isLocked?: boolean;
   unlockLevel?: number;
@@ -23,7 +22,6 @@ export interface CaseData {
   description?: string;
   price: number;
   imageUrl?: string;
-  imageBase64?: string;
   isActive: boolean;
   isLocked: boolean;
   unlockLevel?: number;

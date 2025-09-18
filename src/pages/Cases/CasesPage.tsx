@@ -35,11 +35,7 @@ export function CasesPage() {
   >([]);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const getImageSrc = (
-    imageUrl: string | undefined,
-    imageBase64: string | undefined
-  ) => {
-    if (imageBase64) return imageBase64;
+  const getImageSrc = (imageUrl: string | undefined) => {
     if (!imageUrl) return "";
     if (imageUrl.startsWith("http")) return imageUrl;
     const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -272,13 +268,10 @@ export function CasesPage() {
                   className="border border-gray-200 rounded-lg p-3"
                 >
                   {}
-                  {(caseItem.imageUrl || caseItem.imageBase64) && (
+                  {caseItem.imageUrl && (
                     <div className="aspect-square mb-2">
                       <img
-                        src={getImageSrc(
-                          caseItem.imageUrl,
-                          caseItem.imageBase64
-                        )}
+                        src={getImageSrc(caseItem.imageUrl)}
                         alt={caseItem.name}
                         className="w-full h-full object-cover rounded-md"
                         onError={(e) => {
@@ -649,7 +642,6 @@ function CreateCaseModalContent({
   const [caseDescription, setCaseDescription] = useState("");
   const [casePrice, setCasePrice] = useState("");
   const [caseImageUrl, setCaseImageUrl] = useState("");
-  const [caseImageBase64, setCaseImageBase64] = useState("");
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caseName || !casePrice || localSelectedNfts.length === 0) {
@@ -686,7 +678,6 @@ function CreateCaseModalContent({
       description: caseDescription || undefined,
       price: parseFloat(casePrice),
       imageUrl: caseImageUrl || undefined,
-      imageBase64: caseImageBase64 || undefined,
       nftItems,
       isActive: true,
     };
@@ -704,7 +695,7 @@ function CreateCaseModalContent({
         formData.append('image', file);
         formData.append('type', 'case');
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/upload-image`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/upload-image`, {
           method: 'POST',
           body: formData,
         });
@@ -718,15 +709,8 @@ function CreateCaseModalContent({
         }
       } catch (error) {
         console.error('Ошибка загрузки изображения:', error);
-        showToast("Ошибка загрузки изображения", "error");
-        
-        // Fallback к base64
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setCaseImageBase64(base64String);
-        };
-        reader.readAsDataURL(file);
+        showToast("Ошибка загрузки изображения. Попробуйте меньший файл", "error");
+        setCaseImageUrl(""); // Очистить превью при ошибке
       }
     }
   };
