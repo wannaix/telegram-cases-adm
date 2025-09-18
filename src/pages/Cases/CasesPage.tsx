@@ -695,7 +695,7 @@ function CreateCaseModalContent({
         formData.append('image', file);
         formData.append('type', 'case');
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/upload-image`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/public-admin/upload-image`, {
           method: 'POST',
           body: formData,
         });
