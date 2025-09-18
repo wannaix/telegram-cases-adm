@@ -638,6 +638,16 @@ function CreateCaseModalContent({
   isLoading: boolean;
 }) {
   const { showToast } = useToast();
+  
+  // Функция для получения полного URL изображения
+  const getImageSrc = (imageUrl: string | undefined) => {
+    if (!imageUrl) return "";
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
+    return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+  };
+  
   const [caseName, setCaseName] = useState("");
   const [caseDescription, setCaseDescription] = useState("");
   const [casePrice, setCasePrice] = useState("");
@@ -793,7 +803,7 @@ function CreateCaseModalContent({
             {caseImageUrl ? (
               <div className="relative">
                 <img
-                  src={caseImageUrl}
+                  src={getImageSrc(caseImageUrl)}
                   alt="Превью кейса"
                   className="w-32 h-32 object-cover rounded-lg border border-gray-200"
                 />
@@ -972,6 +982,15 @@ function EditCaseModalContent({
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }) {
+  // Функция для получения полного URL изображения
+  const getImageSrc = (imageUrl: string | undefined) => {
+    if (!imageUrl) return "";
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
+    return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+  };
+  
   const [caseName, setCaseName] = useState(caseData.name);
   const [caseDescription, setCaseDescription] = useState(
     caseData.description || ""
@@ -1084,7 +1103,7 @@ function EditCaseModalContent({
             {caseImageUrl ? (
               <div className="relative">
                 <img
-                  src={caseImageUrl}
+                  src={getImageSrc(caseImageUrl)}
                   alt="Превью кейса"
                   className="w-32 h-32 object-cover rounded-lg border border-gray-200"
                   onError={(e) => {
