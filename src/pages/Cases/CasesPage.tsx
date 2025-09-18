@@ -605,6 +605,7 @@ function CreateCaseModalContent({
   const [caseDescription, setCaseDescription] = useState("");
   const [casePrice, setCasePrice] = useState("");
   const [caseImageUrl, setCaseImageUrl] = useState("");
+  const [caseImageBase64, setCaseImageBase64] = useState("");
   const [selectedNfts, setSelectedNfts] = useState<
     Array<{
       nftId: string;
@@ -654,6 +655,7 @@ function CreateCaseModalContent({
       description: caseDescription || undefined,
       price: parseFloat(casePrice),
       imageUrl: caseImageUrl || undefined,
+      imageBase64: caseImageBase64 || undefined,
       nftItems,
       isActive: true,
     };
@@ -662,7 +664,16 @@ function CreateCaseModalContent({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Показать превью
       setCaseImageUrl(URL.createObjectURL(file));
+      
+      // Конвертировать в base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setCaseImageBase64(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
   const updateNftChance = (nftId: string, dropChance: number) => {
