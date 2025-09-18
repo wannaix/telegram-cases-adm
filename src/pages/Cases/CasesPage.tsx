@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -26,6 +26,13 @@ export function CasesPage() {
   const [selectedCase, setSelectedCase] = useState<CaseData | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [selectedNftsForCase, setSelectedNftsForCase] = useState<
+    Array<{
+      nftId: string;
+      dropChance: number;
+      rarity: "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "CONTRABAND";
+    }>
+  >([]);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const getImageSrc = (
@@ -38,6 +45,22 @@ export function CasesPage() {
     const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
     const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
     return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+  };
+
+  const toggleNftSelection = (nft: any) => {
+    const isSelected = selectedNftsForCase.some(item => item.nftId === nft.id);
+    
+    if (isSelected) {
+      // Убрать NFT из выбранных
+      setSelectedNftsForCase(prev => prev.filter(item => item.nftId !== nft.id));
+    } else {
+      // Добавить NFT в выбранные
+      setSelectedNftsForCase(prev => [...prev, {
+        nftId: nft.id,
+        dropChance: 10, // Начальный шанс
+        rarity: 'COMMON' as const
+      }]);
+    }
   };
   const { data: casesData, isLoading: casesLoading } = useQuery({
     queryKey: ["admin-cases"],
@@ -455,12 +478,12 @@ export function CasesPage() {
                     type="button"
                     onClick={() => toggleNftSelection(nft)}
                     className={`mt-2 w-full py-1 px-2 text-xs rounded transition-colors ${
-                      selectedNfts.some(item => item.nftId === nft.id)
+                      selectedNftsForCase.some(item => item.nftId === nft.id)
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {selectedNfts.some(item => item.nftId === nft.id) ? 'Убрать' : 'Добавить'}
+                    {selectedNftsForCase.some(item => item.nftId === nft.id) ? 'Убрать' : 'Добавить'}
                   </button>
                 </div>
               ))}
@@ -569,7 +592,11 @@ export function CasesPage() {
         <CreateCaseModalContent
           onClose={() => setShowCreateModal(false)}
           availableNfts={filteredNfts}
-          onSubmit={(data) => createCaseMutation.mutate(data)}
+          selectedNfts={selectedNftsForCase}
+          onSubmit={(data) => {
+            createCaseMutation.mutate(data);
+            setSelectedNftsForCase([]); // Очистить выбранные NFT после создания
+          }}
           isLoading={createCaseMutation.isPending}
         />
       </Modal>
@@ -603,11 +630,17 @@ export function CasesPage() {
 function CreateCaseModalContent({
   onClose,
   availableNfts,
+  selectedNfts,
   onSubmit,
   isLoading,
 }: {
   onClose: () => void;
   availableNfts: any[];
+  selectedNfts: Array<{
+    nftId: string;
+    dropChance: number;
+    rarity: "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "CONTRABAND";
+  }>;
   onSubmit: (data: CreateCaseWithNftsRequest) => void;
   isLoading: boolean;
 }) {
@@ -617,26 +650,13 @@ function CreateCaseModalContent({
   const [casePrice, setCasePrice] = useState("");
   const [caseImageUrl, setCaseImageUrl] = useState("");
   const [caseImageBase64, setCaseImageBase64] = useState("");
-  const [selectedNfts, setSelectedNfts] = useState<
-    Array<{
-      nftId: string;
-      dropChance: number;
-      rarity:
-        | "COMMON"
-        | "UNCOMMON"
-        | "RARE"
-        | "EPIC"
-        | "LEGENDARY"
-        | "CONTRABAND";
-    }>
-  >([]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!caseName || !casePrice || selectedNfts.length === 0) {
+    if (!caseName || !casePrice || localSelectedNfts.length === 0) {
       showToast("Заполните все обязательные поля", "warning");
       return;
     }
-    const totalChance = selectedNfts.reduce(
+    const totalChance = localSelectedNfts.reduce(
       (sum, nft) => sum + nft.dropChance,
       0
     );
@@ -647,7 +667,7 @@ function CreateCaseModalContent({
       );
       return;
     }
-    const nftItems = selectedNfts.map((selectedNft) => {
+    const nftItems = localSelectedNfts.map((selectedNft) => {
       const nft = availableNfts.find((n) => n.id === selectedNft.nftId);
       if (!nft) throw new Error(`NFT ${selectedNft.nftId} not found`);
       return {
@@ -710,39 +730,32 @@ function CreateCaseModalContent({
       }
     }
   };
+  const [localSelectedNfts, setLocalSelectedNfts] = useState(selectedNfts);
+
+  // Синхронизируем локальное состояние с пропсами при изменении
+  useEffect(() => {
+    setLocalSelectedNfts(selectedNfts);
+  }, [selectedNfts]);
+
+  const updateNftRarity = (
+    nftId: string,
+    rarity: "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "CONTRABAND"
+  ) => {
+    setLocalSelectedNfts((prev) =>
+      prev.map((item) => (item.nftId === nftId ? { ...item, rarity } : item))
+    );
+  };
+
   const updateNftChance = (nftId: string, dropChance: number) => {
-    setSelectedNfts((prev) =>
+    setLocalSelectedNfts((prev) =>
       prev.map((item) =>
         item.nftId === nftId ? { ...item, dropChance } : item
       )
     );
   };
-  const updateNftRarity = (
-    nftId: string,
-    rarity: "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "CONTRABAND"
-  ) => {
-    setSelectedNfts((prev) =>
-      prev.map((item) => (item.nftId === nftId ? { ...item, rarity } : item))
-    );
-  };
-  const getTotalChance = () => {
-    return selectedNfts.reduce((sum, nft) => sum + nft.dropChance, 0);
-  };
 
-  const toggleNftSelection = (nft: any) => {
-    const isSelected = selectedNfts.some(item => item.nftId === nft.id);
-    
-    if (isSelected) {
-      // Убрать NFT из выбранных
-      setSelectedNfts(prev => prev.filter(item => item.nftId !== nft.id));
-    } else {
-      // Добавить NFT в выбранные
-      setSelectedNfts(prev => [...prev, {
-        nftId: nft.id,
-        dropChance: 10, // Начальный шанс
-        rarity: 'COMMON' as const
-      }]);
-    }
+  const getTotalChance = () => {
+    return localSelectedNfts.reduce((sum, nft) => sum + nft.dropChance, 0);
   };
   return (
     <div className="max-h-[70vh] overflow-y-auto">
@@ -820,14 +833,14 @@ function CreateCaseModalContent({
             </div>
           </div>
         </div>
-        {selectedNfts.length > 0 && (
+        {localSelectedNfts.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Настройка шансов выпадения (общий шанс:{" "}
               {getTotalChance().toFixed(1)}%)
             </label>
             <div className="space-y-3 max-h-72 overflow-y-auto border border-gray-200 rounded-lg p-4">
-              {selectedNfts.map((selectedNft) => {
+              {localSelectedNfts.map((selectedNft) => {
                 const nft = availableNfts.find(
                   (n) => n.id === selectedNft.nftId
                 );
@@ -929,7 +942,7 @@ function CreateCaseModalContent({
               isLoading ||
               !caseName ||
               !casePrice ||
-              selectedNfts.length === 0 ||
+              localSelectedNfts.length === 0 ||
               Math.abs(getTotalChance() - 100) > 0.01
             }
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

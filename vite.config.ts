@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/postcss'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/admin/',
   css: {
     postcss: {
       plugins: [tailwindcss()],

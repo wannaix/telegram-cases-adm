@@ -15,7 +15,7 @@ import {
   Transaction,
   ApiResponse
 } from '../types';
-const API_BASE_URL = '/api/admin';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = localStorage.getItem('admin_token');
