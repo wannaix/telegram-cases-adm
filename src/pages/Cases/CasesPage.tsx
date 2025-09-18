@@ -451,6 +451,17 @@ export function CasesPage() {
                       </span>
                     ))}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleNftSelection(nft)}
+                    className={`mt-2 w-full py-1 px-2 text-xs rounded transition-colors ${
+                      selectedNfts.some(item => item.nftId === nft.id)
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {selectedNfts.some(item => item.nftId === nft.id) ? 'Убрать' : 'Добавить'}
+                  </button>
                 </div>
               ))}
             </div>
@@ -661,19 +672,42 @@ function CreateCaseModalContent({
     };
     onSubmit(caseData);
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Показать превью
       setCaseImageUrl(URL.createObjectURL(file));
       
-      // Конвертировать в base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setCaseImageBase64(base64String);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Загрузить файл на backend
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('type', 'case');
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/upload-image`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCaseImageUrl(data.imageUrl); // URL от backend
+          showToast("Изображение загружено", "success");
+        } else {
+          throw new Error('Ошибка загрузки');
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки изображения:', error);
+        showToast("Ошибка загрузки изображения", "error");
+        
+        // Fallback к base64
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          setCaseImageBase64(base64String);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
   const updateNftChance = (nftId: string, dropChance: number) => {
@@ -693,6 +727,22 @@ function CreateCaseModalContent({
   };
   const getTotalChance = () => {
     return selectedNfts.reduce((sum, nft) => sum + nft.dropChance, 0);
+  };
+
+  const toggleNftSelection = (nft: any) => {
+    const isSelected = selectedNfts.some(item => item.nftId === nft.id);
+    
+    if (isSelected) {
+      // Убрать NFT из выбранных
+      setSelectedNfts(prev => prev.filter(item => item.nftId !== nft.id));
+    } else {
+      // Добавить NFT в выбранные
+      setSelectedNfts(prev => [...prev, {
+        nftId: nft.id,
+        dropChance: 10, // Начальный шанс
+        rarity: 'COMMON' as const
+      }]);
+    }
   };
   return (
     <div className="max-h-[70vh] overflow-y-auto">
