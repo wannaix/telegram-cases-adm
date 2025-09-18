@@ -37,7 +37,7 @@ export function CasesPage() {
   const { showToast } = useToast();
   const getImageSrc = (imageUrl: string | undefined) => {
     if (!imageUrl) return "";
-    if (imageUrl.startsWith("http")) return imageUrl;
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
     const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
     const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
     return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
