@@ -973,6 +973,14 @@ function EditCaseModalContent({
   onSubmit: (data: any) => void;
   isLoading: boolean;
 }) {
+  // Дублируем функцию getImageSrc
+  const getImageSrc = (imageUrl: string | undefined) => {
+    if (!imageUrl) return "";
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) return imageUrl;
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const cleanBaseUrl = baseUrl.replace(/\/api$/, "");
+    return `${cleanBaseUrl}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+  };
   const [caseName, setCaseName] = useState(caseData.name);
   const [caseDescription, setCaseDescription] = useState(
     caseData.description || ""
