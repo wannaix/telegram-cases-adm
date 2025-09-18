@@ -16,6 +16,14 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       }
-    }
+    },
+    hmr: {
+      host: 'localhost'
+    },
+    allowedHosts: [
+      'admin.giftomus.com',
+      'localhost',
+      '84.32.214.55'
+    ]
   }
 })
